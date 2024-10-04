@@ -1,0 +1,34 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+from datetime import datetime
+
+# 抓取数据的函数
+def scrape_quotes():
+    base_url = 'http://quotes.toscrape.com/page/'
+    quotes_list = []
+
+    # 循环抓取多个页面
+    for page in range(1, 100):  # 这里抓取100页
+        response = requests.get(base_url + str(page))
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        quotes = soup.find_all('div', class_='quote')
+        for quote in quotes:
+            text = quote.find('span', class_='text').get_text()
+            author = quote.find('small', class_='author').get_text()
+            timestamp = datetime.now().isoformat()  # 当前时间戳
+            quotes_list.append({'Quote': text, 'Author': author, 'Timestamp': timestamp})
+
+    return quotes_list
+
+# 保存数据到CSV的函数
+def save_to_csv(data):
+    df = pd.DataFrame(data)
+    df.to_csv('quotes_dataset.csv', index=False)
+
+# 主执行部分
+if __name__ == "__main__":
+    scraped_data = scrape_quotes()
+    save_to_csv(scraped_data)
+    print(f'已抓取 {len(scraped_data)} 条名言并保存到 quotes_dataset.csv')
